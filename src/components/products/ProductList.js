@@ -1,20 +1,18 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import "./Products.css"
 export const ProductList = () => {
     const [products, setProducts] = useState([])
+    const localKandyUser = localStorage.getItem("kandy_user")
+    const kandyUserObject = JSON.parse(localKandyUser)
     // By default, I do not want to show topPriced candy, so pass "false" in useState for topPriced.
+    const navigate = useNavigate()
     const [filteredProducts, setFilteredProducts] = useState([])
     const [topPricedProducts, setTopPricedProducts] = useState(false)
-// Employee function
-    // useEffect(
-    //     () => {
-    //         if ()
-    //     }
-    // )
 
     useEffect(
         () => {
-            fetch(`http://localhost:8088/products`)
+            fetch(`http://localhost:8088/products?_sort=name&_order=asc&_expand=productType`)
                 .then(response => response.json())
                 .then((productArray) => {
                     setProducts(productArray)
@@ -22,6 +20,21 @@ export const ProductList = () => {
         },
         [] // When this array is empty, you are observing initial component state
     )
+
+    useEffect(
+        () => {
+            if (kandyUserObject.staff) {
+                //for employees
+                setFilteredProducts(products)
+            } else {
+               //for customers 
+               const myProducts = products.filter(product => product.userId === kandyUserObject.id)
+               setFilteredProducts(myProducts)
+            }
+        },
+        [products]
+    )
+    
 
     useEffect(
         () => {setFilteredProducts(products)},[products]
@@ -43,11 +56,16 @@ export const ProductList = () => {
         [topPricedProducts]
     )
     return <>
-    <button
-        onClick={
-            () => {setTopPricedProducts(true)}
+           { 
+                kandyUserObject.staff
+                    ? <>
+                    <button onClick={() => {setTopPricedProducts(true)}}>Top Priced</button>
+                    <button onClick={() => navigate("/product/create")}>Create Kandy</button>
+                    </>
+                    : ""
+        
         }
-        >Top Priced</button>
+
     <h2>List of Products</h2>
             <article className="products">
                 {
@@ -56,8 +74,9 @@ export const ProductList = () => {
                             return <section className="product" key={`product--${product.id}`}>
                                 <header>{product.name}
                                 </header>
-                                <footer>cost: {product.price}
+                                <footer>Cost: ${product.price}
                                 </footer>
+                                <div>Kandy Kategory: {product.productType.type}</div>
                             </section>
                         }
                     )
