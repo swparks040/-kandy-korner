@@ -11,7 +11,7 @@ export const ProductForm = () => {
         name: "",
         productTypeId:(0),
         price: "",
-        onSale: false
+        
     })
     useEffect(
         () => {
